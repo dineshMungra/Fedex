@@ -1,10 +1,10 @@
-package com.example.fluxdemo;
+package com.fedex.aggregationapi;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class FluxdemoApplicationTests {
+class AggregationApiApplicationTests {
 
 	@Test
 	void contextLoads() {
