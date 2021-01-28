@@ -9,21 +9,22 @@ import org.springframework.web.client.RestTemplate;
 import java.util.List;
 
 @Service
-public class ShipmentService {
+public class TrackService {
+
     @Autowired
     private RestTemplate restTemplate;
 
-    public FedexApiResponseData getShipmentsForIds(List<String> productOrderNumbers) {
+    public FedexApiResponseData getTracksForIds(List<String> track) {
         StringBuilder sb = new StringBuilder("?q=");
-        for(String productOrderNumber : productOrderNumbers) {
+        for(String productOrderNumber : track) {
             sb.append(productOrderNumber);
-            if (productOrderNumbers.lastIndexOf(productOrderNumber) != productOrderNumbers.size() -1) {
+            if (track.lastIndexOf(productOrderNumber) != track.size() -1) {
                 sb.append(",");
             }
         }
 
         ResponseEntity<FedexApiResponseData> shipments = restTemplate.getForEntity(
-                "http://localhost:8080/shipments" + sb.toString(), FedexApiResponseData.class);
+                "http://localhost:8080/track" + sb.toString(), FedexApiResponseData.class);
 
         return shipments.getBody();
     }
