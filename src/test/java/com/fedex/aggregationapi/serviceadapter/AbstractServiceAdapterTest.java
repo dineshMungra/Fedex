@@ -5,7 +5,6 @@ import com.fedex.aggregationapi.model.FedexApiResponseData;
 import com.fedex.aggregationapi.service.AbstractFedexApiService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Arrays;
 import java.util.List;
@@ -60,7 +59,7 @@ public class AbstractServiceAdapterTest {
     }
 
     /*
-     * TODO: een unit test voor als bulk request wordt uitgevoerd en alle resultaten voor het meegegeven request
+     * Een unit test voor als bulk request wordt uitgevoerd en alle resultaten voor het meegegeven request
      * daarna binnen zijn; en een unit test voor als 1 client moet wachten, totdat een andere client na een bulk request
      * de resultaten die client 1 nodig heeft in de cache heeft gedaan.
      */
