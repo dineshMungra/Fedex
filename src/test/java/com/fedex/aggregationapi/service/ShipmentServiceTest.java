@@ -35,7 +35,7 @@ public class ShipmentServiceTest {
                 .thenReturn(expectedShipmentsResponse);
 
         FedexApiResponseData shipments =
-                shipmentService.getShipmentsForIds(Arrays.asList("109347263","123456891"));
+                shipmentService.getResultsForIds(Arrays.asList("109347263","123456891"));
 
         ArgumentCaptor<String> urlCaptor = ArgumentCaptor.forClass(String.class);
         verify(mockRestTemplate).getForEntity(urlCaptor.capture(), eq(FedexApiResponseData.class));

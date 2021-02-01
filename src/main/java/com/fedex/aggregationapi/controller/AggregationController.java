@@ -1,32 +1,25 @@
 package com.fedex.aggregationapi.controller;
 
 import com.fedex.aggregationapi.model.FedexApiResponseData;
-import com.fedex.aggregationapi.service.PricingService;
-import com.fedex.aggregationapi.service.ShipmentService;
-import com.fedex.aggregationapi.service.TrackService;
 import com.fedex.aggregationapi.serviceadapter.PricingServiceAdapter;
+import com.fedex.aggregationapi.serviceadapter.ShipmentServiceAdapter;
+import com.fedex.aggregationapi.serviceadapter.TrackServiceAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
+import java.util.*;
+import java.util.concurrent.*;
 
 @RestController
 @RequestMapping("/aggregation")
 public class AggregationController {
 
     @Autowired
-    ShipmentService shipmentService;
-    @Autowired
-    PricingService pricingService;
-    @Autowired
-    TrackService trackService;
-
-    @Autowired
     PricingServiceAdapter pricingServiceAdapter;
+    @Autowired
+    ShipmentServiceAdapter shipmentServiceAdapter;
+    @Autowired
+    TrackServiceAdapter trackServiceAdapter;
 
     @GetMapping
     @ResponseBody
@@ -35,30 +28,60 @@ public class AggregationController {
                               @RequestParam("shipments") List<String> shipments) {
 
         Map<String, FedexApiResponseData> response = new HashMap<>();
-        pricingServiceAdapter.supplyRequestAndWaitForResponse(pricing.hashCode(), pricing);
 
-        // blocks waiting for pricing service response
-        Future<FedexApiResponseData> pricingResultsFuture =
-                pricingServiceAdapter.supplyRequestAndWaitForResponse(pricing.hashCode(), pricing);
+        // one thread per API (pricing, track, shipments) so the calls can execute in parallel
+        ExecutorService executorService = Executors.newFixedThreadPool(3);
+        Collection<? extends Callable<Map<String, FedexApiResponseData>>> serviceCalls =
+                createListOfApiCalls(pricing, shipments, track);
+        List<Future<Map<String, FedexApiResponseData>>> futures = null;
 
-        FedexApiResponseData pricingResults = null;
-        // block waiting for response
         try {
-            pricingResults = pricingResultsFuture.get();
+            futures = executorService.invokeAll(serviceCalls);
         } catch (InterruptedException e) {
-            throw new RuntimeException("Interrupted waiting for response of Pricing service.", e);
-        } catch (ExecutionException e) {
-            throw new RuntimeException("Error while processing response of Pricing service.", e);
+            e.printStackTrace();
         }
 
-        response.put("pricing", pricingResults);
+        for(Future<Map<String, FedexApiResponseData>> future : futures) {
+            try {
+                Map<String, FedexApiResponseData> result = future.get();
+                for(String key : result.keySet()) {
+                    response.put(key, result.get(key));
+                }
+            } catch (InterruptedException e) {
 
-        FedexApiResponseData trackResults = trackService.getTracksForIds(track);
-        response.put("track", trackResults);
+            } catch (ExecutionException e) {
 
-        FedexApiResponseData shipmentResults = shipmentService.getShipmentsForIds(shipments);
-        response.put("shipments", shipmentResults);
-
+            }
+        }
+        executorService.shutdown();
         return response;
     }
+
+    private Collection<? extends Callable<Map<String,FedexApiResponseData>>> createListOfApiCalls(
+            List<String> pricing, List<String> shipments, List<String> track) {
+
+        Callable<Map<String, FedexApiResponseData>> pricingCallable = () -> {
+            Map<String, FedexApiResponseData> pricingResult = new HashMap<>();
+            pricingResult.put("pricing", pricingServiceAdapter.processRequestAndWaitForResponse(pricing));
+            return pricingResult;
+        };
+
+        Callable<Map<String, FedexApiResponseData>> shipmentCallable = () -> {
+            Map<String, FedexApiResponseData> shipmentResult = new HashMap<>();
+            shipmentResult.put("shipment", shipmentServiceAdapter.processRequestAndWaitForResponse(shipments));
+            return shipmentResult;
+        };
+
+        Callable<Map<String, FedexApiResponseData>> trackCallable = () -> {
+            Map<String, FedexApiResponseData> trackResult = new HashMap<>();
+            trackResult.put("track", trackServiceAdapter.processRequestAndWaitForResponse(track));
+            return trackResult;
+        };
+
+        List<Callable<Map<String, FedexApiResponseData>>> apiCalls = new ArrayList<>(
+                Arrays.asList(pricingCallable, shipmentCallable, trackCallable));
+        return apiCalls;
+    }
+
+
 }

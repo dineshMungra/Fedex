@@ -1,6 +1,6 @@
 package com.fedex.aggregationapi.config;
 
-import com.fedex.aggregationapi.broker.ServiceBroker;
+import com.fedex.aggregationapi.cache.ServiceCache;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
@@ -19,7 +19,21 @@ public class BeanConfiguration {
 
     @Bean
     @Scope(value = ConfigurableBeanFactory.SCOPE_SINGLETON)
-    public ServiceBroker pricingServiceBroker() {
-        return new ServiceBroker();
+    public ServiceCache pricingServiceCache() {
+        return new ServiceCache();
     }
+
+    @Bean
+    @Scope(value = ConfigurableBeanFactory.SCOPE_SINGLETON)
+    public ServiceCache shipmentServiceCache() {
+        return new ServiceCache();
+    }
+
+    @Bean
+    @Scope(value = ConfigurableBeanFactory.SCOPE_SINGLETON)
+    public ServiceCache trackServiceCache() {
+        return new ServiceCache();
+    }
+
+
 }

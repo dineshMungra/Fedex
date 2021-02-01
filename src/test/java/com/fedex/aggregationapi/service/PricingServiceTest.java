@@ -34,7 +34,7 @@ public class PricingServiceTest {
                 .thenReturn(responseWithExpectedPrices);
 
         FedexApiResponseData pricesForCountryCodes =
-                pricingService.getPricesForCountryCodes(Arrays.asList("NL","SR"));
+                pricingService.getResultsForIds(Arrays.asList("NL","SR"));
 
         ArgumentCaptor<String> urlCaptor = ArgumentCaptor.forClass(String.class);
         verify(mockRestTemplate).getForEntity(urlCaptor.capture(), eq(FedexApiResponseData.class));

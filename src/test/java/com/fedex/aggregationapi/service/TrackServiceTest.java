@@ -33,7 +33,7 @@ public class TrackServiceTest {
                 .thenReturn(expectedShipmentsResponse);
 
         FedexApiResponseData tracks =
-                trackService.getTracksForIds(Arrays.asList("1234567","7654321","653543214"));
+                trackService.getResultsForIds(Arrays.asList("1234567","7654321","653543214"));
 
         ArgumentCaptor<String> urlCaptor = ArgumentCaptor.forClass(String.class);
         verify(mockRestTemplate).getForEntity(urlCaptor.capture(), eq(FedexApiResponseData.class));
